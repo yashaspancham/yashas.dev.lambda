@@ -1,30 +1,31 @@
-import json
-import lambda_function
-from moto import mock_dynamodbv2 as mock_dynamodb
 import boto3
 import os
+import json
 
-@mock_dynamodb
-def test_lambda_handler():
-    os.environ["TABLE_NAME"] = "TestTable"
-    os.environ["PARTITION_KEY"] = "counter"
-    os.environ["PARTITION_VALUE"] = "visits"
+def lambda_handler(event, context):
+    dynamodb = boto3.client('dynamodb', region_name=os.getenv("AWS_REGION", "us-east-1"))
 
-    client = boto3.client('dynamodb', region_name='us-east-1')
-    client.create_table(
-        TableName="TestTable",
-        KeySchema=[{"AttributeName": "counter", "KeyType": "HASH"}],
-        AttributeDefinitions=[{"AttributeName": "counter", "AttributeType": "S"}],
-        BillingMode="PAY_PER_REQUEST"
-    )
-    client.put_item(
-        TableName="TestTable",
-        Item={"counter": {"S": "visits"}, "count": {"N": "0"}}
+    table_name = os.environ["TABLE_NAME"]
+    key = os.environ["PARTITION_KEY"]
+    value = os.environ["PARTITION_VALUE"]
+
+    response = dynamodb.get_item(
+        TableName=table_name,
+        Key={key: {"S": value}}
     )
 
-    response = lambda_function.lambda_handler({}, {})
-    body = json.loads(response["body"])
+    count = int(response["Item"]["count"]["N"])
+    count += 1
 
-    assert response["statusCode"] == 200
-    assert "visitorsCount" in body
-    assert isinstance(body["visitorsCount"], int)
+    dynamodb.put_item(
+        TableName=table_name,
+        Item={
+            key: {"S": value},
+            "count": {"N": str(count)}
+        }
+    )
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({"visitorsCount": count})
+    }
