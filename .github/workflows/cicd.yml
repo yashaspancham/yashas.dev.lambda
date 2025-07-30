@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  id-token: write   # Needed for OIDC
+  id-token: write # Needed for OIDC
   contents: read
 
 jobs:
@@ -14,33 +14,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        role-to-assume: ${{secrets.IAM_ROLE_TO_ASSIGN}}  
-        aws-region: ${{secrets.AWS_REGION}}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE_TO_ASSIGN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Package Lambda
-      run: |
-        mkdir -p package
-        cp lambda_function.py package/
-        cd package
-        zip -r ../lambda.zip .
+      - name: Print debug info
+        run: |
+          echo "Role ARN: ${{ secrets.IAM_ROLE_TO_ASSIGN }}"
+          echo "Region: ${{ secrets.AWS_REGION }}"
 
-    - name: Deploy to AWS Lambda
-      env:
-        LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
-        TABLE_NAME: ${{secrets.TABLE_NAME}}
-        PARTITION_KEY: ${{secrets.PARTITION_KEY}}
-        PARTITION_VALUE: ${{secrets.PARTITION_VALUE}}
-      run: |
-        aws lambda update-function-code \
-          --function-name $LAMBDA_FUNCTION_NAME \
-          --zip-file fileb://lambda.zip
+      - name: Package Lambda
+        run: |
+          mkdir -p package
+          cp lambda_function.py package/
+          cd package
+          zip -r ../lambda.zip .
 
-        aws lambda update-function-configuration \
-          --function-name $LAMBDA_FUNCTION_NAME \
-          --environment "Variables={TABLE_NAME=$TABLE_NAME,PARTITION_KEY=$PARTITION_KEY,PARTITION_VALUE=$PARTITION_VALUE}"
+      - name: Deploy to AWS Lambda
+        env:
+          LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+          TABLE_NAME: ${{ secrets.TABLE_NAME }}
+          PARTITION_KEY: ${{ secrets.PARTITION_KEY }}
+          PARTITION_VALUE: ${{ secrets.PARTITION_VALUE }}
+        run: |
+          aws lambda update-function-code \
+            --function-name $LAMBDA_FUNCTION_NAME \
+            --zip-file fileb://lambda.zip
+
+          aws lambda update-function-configuration \
+            --function-name $LAMBDA_FUNCTION_NAME \
+            --environment "Variables={TABLE_NAME=$TABLE_NAME,PARTITION_KEY=$PARTITION_KEY,PARTITION_VALUE=$PARTITION_VALUE}"
