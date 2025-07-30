@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  id-token: write # Needed for OIDC
+  id-token: write  # Needed for OIDC
   contents: read
 
 jobs:
@@ -23,10 +23,8 @@ jobs:
           role-to-assume: ${{ secrets.IAM_ROLE_TO_ASSIGN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Print debug info
-        run: |
-          echo "Role ARN: ${{ secrets.IAM_ROLE_TO_ASSIGN }}"
-          echo "Region: ${{ secrets.AWS_REGION }}"
+      - name: Verify AWS Identity
+        run: aws sts get-caller-identity
 
       - name: Package Lambda
         run: |
