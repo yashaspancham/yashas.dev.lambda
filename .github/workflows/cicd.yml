@@ -1,6 +1,9 @@
-name: Deploy Lambda
+name: Test and Deploy Lambda
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -10,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +31,18 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }} # ensures boto3 has a region set
+        run: pytest -v
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -54,9 +68,9 @@ jobs:
           PARTITION_VALUE: ${{ secrets.PARTITION_VALUE }}
         run: |
           aws lambda update-function-code \
-            --function-name $LAMBDA_FUNCTION_NAME \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
             --zip-file fileb://lambda.zip
 
           aws lambda update-function-configuration \
-            --function-name $LAMBDA_FUNCTION_NAME \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
             --environment "Variables={TABLE_NAME=$TABLE_NAME,PARTITION_KEY=$PARTITION_KEY,PARTITION_VALUE=$PARTITION_VALUE}"
