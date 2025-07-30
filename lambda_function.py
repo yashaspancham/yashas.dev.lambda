@@ -33,5 +33,5 @@ def lambda_handler(event, context):
             "Access-Control-Allow-Headers": "*",
             "Access-Control-Allow-Methods": "OPTIONS,PUT"
         },
-        "body": json.dumps({"Visitcount": new_count})
+        "body": json.dumps({"Visiterscount": new_count})
     }
