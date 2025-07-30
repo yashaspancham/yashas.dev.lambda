@@ -31,6 +31,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }} # ensures boto3 has a region set
         run: pytest
 
   deploy:
@@ -66,9 +68,9 @@ jobs:
           PARTITION_VALUE: ${{ secrets.PARTITION_VALUE }}
         run: |
           aws lambda update-function-code \
-            --function-name $LAMBDA_FUNCTION_NAME \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
             --zip-file fileb://lambda.zip
 
           aws lambda update-function-configuration \
-            --function-name $LAMBDA_FUNCTION_NAME \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
             --environment "Variables={TABLE_NAME=$TABLE_NAME,PARTITION_KEY=$PARTITION_KEY,PARTITION_VALUE=$PARTITION_VALUE}"
