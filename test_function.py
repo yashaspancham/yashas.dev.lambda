@@ -1,6 +1,6 @@
 import json
 import lambda_function  # This is your Lambda function module
-from moto import mock_dynamodb
+from moto import mock_dynamodb2
 import boto3
 import os
 
