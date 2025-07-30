@@ -33,7 +33,7 @@ jobs:
       - name: Run tests
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }} # ensures boto3 has a region set
-        run: pytest
+        run: pytest -v
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
