@@ -1,7 +1,7 @@
 # Website Visitor Counter (AWS Lambda + DynamoDB)
 
 This project implements a simple **visitor counter** for wwww.yashas-dev.com using **AWS Lambda** (Python) and **Amazon DynamoDB**.  
-Every time the function is invoked (e.g., via API Gateway), it increments a counter in DynamoDB and returns the updated visit count.
+Every time the function is invoked (via API Gateway), it increments a counter in DynamoDB and returns the updated visit count.
 
 ---
 
